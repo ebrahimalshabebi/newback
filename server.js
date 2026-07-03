@@ -4,8 +4,17 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const { Pool } = require("pg");
+const cloudinary = require("cloudinary").v2;
 
 const app = express();
+
+// ✅ DATABASE
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 app.use(cors({
   origin: "*"
@@ -18,28 +27,13 @@ app.get("/", (req, res) => {
   res.send("Backend is running ✅");
 });
 
-app.get("/ping", async (req, res) => {
-  try {
-    await pool.query("SELECT NOW()");
-
-    res.status(200).json({
-      status: "awake",
-      time: new Date()
-    });
-  } catch (err) {
-    res.status(500).json({
-      error: err.message
-    });
-  }
+app.get("/ping", (req, res) => {
+  res.status(200).send("OK");
 });
 
-// ✅ DATABASE
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
 
 // ✅ STORAGE
 const storage = multer.diskStorage({
@@ -192,7 +186,6 @@ app.delete("/delete-video/:id", async (req, res) => {
   }
 
 });
-const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
